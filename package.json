@@ -1,0 +1,22 @@
+{
+  "name": "github-blog",
+  "version": "0.1.0",
+  "description": "My GitHub Blog",
+  "repository": "https://github.com/e5r/github-blog",
+  "author": "Erlimar Silva Campos <erlimar@gmail.com>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "nodemon ./serve.js",
+    "build": "gulp"
+  },
+  "devDependencies": {
+    "finalhandler": "^1.1.2",
+    "gulp": "^4.0.2",
+    "nodemon": "^2.0.1",
+    "serve-static": "^1.14.1"
+  },
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "jquery": "^3.4.1"
+  }
+}
