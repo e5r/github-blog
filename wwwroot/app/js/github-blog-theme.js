@@ -6,6 +6,19 @@
 
     function themeStartup(metadata) {
         console.log('Metadados carregados. Inicializando o tema!', metadata);
+
+        applyBlogInfo(metadata.blog || {});
+        showBlog();
+    }
+
+    function applyBlogInfo(blogInfo) {
+        $('header [data-id="blog-title"]').text(blogInfo.title);
+        $('header [data-id="blog-abstract"]').text(blogInfo.abstract);
+    }
+
+    function showBlog() {
+        $('header,main,footer').removeClass('d-none');
+        $('body').removeClass('app-loading');
     }
 
     function installTheme() {
