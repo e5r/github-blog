@@ -1,7 +1,7 @@
 // Copyright (c) E5R Development Team. All rights reserved.
 // Licensed under the Apache License, Version 2.0. More license information in LICENSE.txt.
 
-+function ($, GHB) {
++function ($, gitHubBlog) {
     "use strict";
 
     $(document).ready(function () {
@@ -12,7 +12,7 @@
                 branch: body.data('github-branch') || 'master'
             };
 
-        GHB.init(options);
+        gitHubBlog.init(options, (gitHubBlog.themeEngine || {}).startup);
     });
 
 }(jQuery, window.GitHubBlog);

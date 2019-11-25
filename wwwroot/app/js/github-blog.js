@@ -82,7 +82,7 @@
             return total;
         })) {
             clearTimeout(timeoutHandler);
-            ready();
+            ready(ensureParam('blog.metadata', {}));
         };
     }
 
@@ -91,8 +91,9 @@
         clearTimeout(timeoutHandler);
     }
 
-    function ready() {
-        console.log("Ready!");
+    function ready(metadata) {
+        typeof ready.startup === 'function' &&
+            ready.startup(metadata);
     }
 
     function timeoutTask() {
@@ -470,19 +471,19 @@
         });
 
         function done() {
-            !TASKS_STATUS[TASK_NAME] && doneTask(TASK_NAME);
-            // TODO: next
-
-            // A última tarefa sempre conclui. Isso garante a chamada a ready()
+            // A última tarefa sempre conclui independente de já ter sido concluída antes.
+            // Isso garante a chamada a ready()
             doneTask(TASK_NAME);
         }
     }
 
     exports.GitHubBlog = {
-        init: function (options) {
+        init: function (options, startup) {
             timeoutHandler = setTimeout(timeoutTask, SETUP_TIMEOUT);
+            ready.startup = startup;
             startParamsTask(options);
-        }
+        },
+        themeEngine: {}
     };
 
 }(jQuery, window);
