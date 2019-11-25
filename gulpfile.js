@@ -13,17 +13,18 @@ function copyJQuery(cb) {
         .pipe(dest('wwwroot/lib/js'));
 }
 
+function copyJQueryBase64(cb) {
+    return src('node_modules/jquery-base64/jquery.base64.{min.js,js}')
+        .pipe(dest('wwwroot/lib/js'));
+}
+
 function copyBootstrap(cb) {
     return src('node_modules/bootstrap/dist/**/bootstrap.{min.css,css,bundle.min.js,bundle.js}')
         .pipe(dest('wwwroot/lib'));
 }
 
-function copyPopper(cb) {
-    cb();
-}
-
 exports['build'] = build;
 exports['clean'] = clean;
-exports['copy-lib'] = parallel(copyJQuery, copyBootstrap, copyPopper);
+exports['copy-lib'] = parallel(copyJQuery, copyBootstrap, copyJQueryBase64);
 exports['default'] = series(clean, build);
 
