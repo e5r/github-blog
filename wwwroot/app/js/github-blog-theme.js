@@ -4,16 +4,35 @@
 +function ($, gitHubBlog) {
     "use strict";
 
-    function themeStartup(metadata) {
-        console.log('Metadados carregados. Inicializando o tema!', metadata);
+    var engine = gitHubBlog.themeEngine;
 
-        applyBlogInfo(metadata.blog || {});
+    function themeStartup(blogInfo) {
+        applyBlogInfo(blogInfo || {});
         showBlog();
+        route();
     }
 
     function applyBlogInfo(blogInfo) {
-        $('header [data-id="blog-title"]').text(blogInfo.title);
-        $('header [data-id="blog-abstract"]').text(blogInfo.abstract);
+        var titleEl = $('header [data-id="blog-title"]'),
+            abstractEl = $('header [data-id="blog-abstract"]'),
+            categoriesEl = $('header [data-id="categories"'),
+            categoryItemTemplate = $('[data-id="categories-item"]', categoriesEl);
+
+        titleEl.text(blogInfo.title);
+        abstractEl.text(blogInfo.abstract);
+
+        categoriesEl.empty();
+
+        engine.getAllCategories().forEach(function (category) {
+            var item = categoryItemTemplate.clone(),
+                link = $('a', item);
+
+            link.attr('href', 'http://erlimar.com')
+                .attr('target', '_blank')
+                .text(category);
+
+            item.appendTo(categoriesEl);
+        });
     }
 
     function showBlog() {
@@ -25,6 +44,10 @@
         gitHubBlog.themeEngine = {
             startup: themeStartup
         };
+    }
+
+    function route() {
+        var template = engine.getTemplate('home-posts');
     }
 
     installTheme();

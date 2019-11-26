@@ -93,7 +93,7 @@
 
     function ready(metadata) {
         typeof ready.startup === 'function' &&
-            ready.startup(metadata);
+            ready.startup(metadata.blog);
     }
 
     function timeoutTask() {
@@ -477,13 +477,67 @@
         }
     }
 
+    /* Theme engine
+    ---------------------------------------------------------------------- */
+    function ThemeEngine() {
+        if (!(this instanceof ThemeEngine)) {
+            return new ThemeEngine();
+        }
+
+        this.__templates__ = [];
+    };
+
+    ThemeEngine.prototype.getTemplate = function (templateId) {
+        var self = this,
+            cached = self.__templates__.filter(function (v) { return v.id === templateId });
+
+        if (cached.length)
+            return cached[0].element.clone();
+
+        var templateContent = $('script[type="text/template"][data-template-id="' + templateId + '"]').html();
+
+        if (templateContent) {
+            var templateItem = {
+                id: templateId,
+                element: $(templateContent)
+            };
+
+            self.__templates__.push(templateItem);
+
+            return templateItem.element.clone();
+        }
+    }
+
+    ThemeEngine.prototype.getAllCategories = function () {
+        var metadata = ensureParam('blog.metadata', {}),
+            posts = Array.isArray(metadata.posts) ? metadata.posts : [],
+            categories = posts.reduce(function (first, second) {
+                var calculated = Array.isArray(first)
+                    ? first
+                    : [];
+
+                if (!Array.isArray(first) && Array.isArray(first.categories))
+                    calculated = calculated.concat(first.categories)
+
+                if (Array.isArray(second.categories))
+                    calculated = calculated.concat(second.categories)
+
+                return calculated;
+            });
+
+        return categories.sort();
+    }
+
+    /* Exports
+    ---------------------------------------------------------------------- */
+
     exports.GitHubBlog = {
         init: function (options, startup) {
             timeoutHandler = setTimeout(timeoutTask, SETUP_TIMEOUT);
             ready.startup = startup;
             startParamsTask(options);
         },
-        themeEngine: {}
+        themeEngine: new ThemeEngine()
     };
 
 }(jQuery, window);
