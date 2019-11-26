@@ -11,7 +11,7 @@ function copyJQueryBase64(cb) {
 }
 
 function copyBootstrap(cb) {
-    return src('node_modules/bootstrap/dist/**/bootstrap.{min.css,css,bundle.min.js,bundle.js}')
+    return src('node_modules/bootstrap/dist/**/bootstrap.{min.css,css,bundle.min.js,bundle.js,bundle.js.map}')
         .pipe(dest('wwwroot/lib'));
 }
 

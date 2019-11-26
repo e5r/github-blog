@@ -585,12 +585,12 @@
 
     Router.prototype.findRouteHandler = function (path) {
         var self = this,
-            record = self.__routes__.filter(function (r) { return r.path === path })[0]
-                || path === '/'
-                ? self.__routes__.filter(function (r) { return r.path === self.__defaultRoute__ })[0]
-                : { handler: self.__notFoundHandler__ };
+            record = self.__routes__.filter(function (r) { return r.path === path })[0] ||
+                (path === '/'
+                    ? self.__routes__.filter(function (r) { return r.path === self.__defaultRoute__ })[0]
+                    : { handler: self.__notFoundHandler__.bind({}, path) });
 
-        return record.handler;
+        return record.handler.bind({});
     }
 
     Router.prototype.ignite = function (oldPath) {
@@ -632,13 +632,10 @@
                     }
 
                     return result;
-                }, {});
+                }, {}),
+            handler = self.findRouteHandler(path);
 
-        console.log('url:', hashUrl);
-        console.log('-parts:', parts);
-        console.log('-path:', path);
-        console.log('-params:', params);
-        console.log('-route:', self.findRouteHandler(path));
+        handler(params);
     }
 
     /* Exports

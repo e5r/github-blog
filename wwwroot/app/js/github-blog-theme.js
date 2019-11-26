@@ -59,7 +59,7 @@
                 console.log('-> path:', path);
                 console.log('-> params:', params);
             })
-            .otherwise('/about');
+            .otherwise('/home');
     })();
 
 }(jQuery, window.GitHubBlog);
