@@ -6,33 +6,36 @@
 
     /* Engine
     ---------------------------------------------------------------------- */
-    var __storage__ = window.localStorage
-        ? window.localStorage
-        : (function localStorageFallback() {
-            if (!(this instanceof localStorageFallback)) {
-                return new localStorageFallback();
-            }
+    var __startup__ = function () { },
+        __themeEngine__ = new ThemeEngine(),
+        __router__ = new Router(),
+        __storage__ = window.localStorage
+            ? window.localStorage
+            : (function localStorageFallback() {
+                if (!(this instanceof localStorageFallback)) {
+                    return new localStorageFallback();
+                }
 
-            var self = this;
+                var self = this;
 
-            self.__data__ = {};
-
-            self.setItem = function (name, value) {
-                self.__data__[name] = value;
-            }
-
-            self.getItem = function (name) {
-                return self.__data__[name];
-            }
-
-            self.removeItem = function (name) {
-                delete self.__data__[name];
-            }
-
-            self.clear = function () {
                 self.__data__ = {};
-            }
-        })(),
+
+                self.setItem = function (name, value) {
+                    self.__data__[name] = value;
+                }
+
+                self.getItem = function (name) {
+                    return self.__data__[name];
+                }
+
+                self.removeItem = function (name) {
+                    delete self.__data__[name];
+                }
+
+                self.clear = function () {
+                    self.__data__ = {};
+                }
+            })(),
 
         decodeBase64 = true &&
             typeof window.decodeURIComponent === 'function' &&
@@ -92,8 +95,7 @@
     }
 
     function ready(metadata) {
-        typeof ready.startup === 'function' &&
-            ready.startup(metadata.blog);
+        __startup__(metadata.blog);
     }
 
     function timeoutTask() {
@@ -528,16 +530,130 @@
         return categories.sort();
     }
 
+    /* Router
+    ---------------------------------------------------------------------- */
+    function Router() {
+        if (!(this instanceof Router)) {
+            return new Router();
+        }
+
+        this.__routes__ = [];
+        this.__defaultRoute__ = "";
+        this.__notFoundHandler__ = function silentNotFoundHandler() { };
+        this.__ignited__ = false;
+    }
+
+    Router.prototype.when = function (path, handler) {
+        if (typeof path !== 'string')
+            throw 'Param @path must be a string';
+
+        if (typeof handler !== 'function')
+            throw 'Param @handler must be a function';
+
+        var self = this,
+            record = self.__routes__.filter(function (r) { return r.path === path })[0];
+
+        if (!record) {
+            record = {
+                path: path,
+                handler: handler
+            };
+
+            self.__routes__.push(record);
+        }
+
+        return this;
+    };
+
+    Router.prototype.notFound = function (handler) {
+        if (typeof handler !== 'function')
+            throw 'Param @handler must be a function';
+
+        this.__notFoundHandler__ = handler;
+
+        return this;
+    }
+
+    Router.prototype.otherwise = function (path) {
+        if (typeof path !== 'string')
+            throw 'Param @path must be a string';
+
+        this.__defaultRoute__ = path;
+
+        return this;
+    }
+
+    Router.prototype.findRouteHandler = function (path) {
+        var self = this,
+            record = self.__routes__.filter(function (r) { return r.path === path })[0]
+                || path === '/'
+                ? self.__routes__.filter(function (r) { return r.path === self.__defaultRoute__ })[0]
+                : { handler: self.__notFoundHandler__ };
+
+        return record.handler;
+    }
+
+    Router.prototype.ignite = function (oldPath) {
+        var self = this;
+
+        self.__ignited__ || window.addEventListener('hashchange', function (event) {
+            var url = document.createElement('a');
+            url.href = event.oldURL;
+            self.ignite(url.hash);
+        });
+
+        var hashUrl = location.hash || '/';
+
+        if (hashUrl.length && hashUrl.charAt(0) === '#')
+            hashUrl = hashUrl.substring(1);
+
+        function RouterParam() { };
+
+        var parts = hashUrl.split('?'),
+            path = parts[0],
+            params = (parts[1] || '')
+                .split('&')
+                .map(function (param) {
+                    var pair = (param || '').split('=');
+
+                    return { key: pair[0], value: pair[1] || true }
+                })
+                .filter(function (v) { return v.key })
+                .reduce(function (result, item) {
+                    if (item && item.key) {
+                        result[item.key] = typeof item.value === 'string' && item.value.indexOf('%') >= 0
+                            ? decodeURIComponent(item.value)
+                            : item.value;
+
+                        try {
+                            result[item.key] = JSON.parse(result[item.key]);
+                        }
+                        catch{ }
+                    }
+
+                    return result;
+                }, {});
+
+        console.log('url:', hashUrl);
+        console.log('-parts:', parts);
+        console.log('-path:', path);
+        console.log('-params:', params);
+        console.log('-route:', self.findRouteHandler(path));
+    }
+
     /* Exports
     ---------------------------------------------------------------------- */
-
     exports.GitHubBlog = {
-        init: function (options, startup) {
+        themeEngine: function () { return __themeEngine__; },
+        router: function () { return __router__; },
+        init: function (options) {
             timeoutHandler = setTimeout(timeoutTask, SETUP_TIMEOUT);
-            ready.startup = startup;
             startParamsTask(options);
         },
-        themeEngine: new ThemeEngine()
+        themeStartup: function (handler) {
+            if (typeof handler !== 'function') return;
+            __startup__ = handler;
+        }
     };
 
 }(jQuery, window);

@@ -12,7 +12,7 @@
                 branch: body.data('github-branch') || 'master'
             };
 
-        gitHubBlog.init(options, (gitHubBlog.themeEngine || {}).startup);
+        gitHubBlog.init(options);
     });
 
 }(jQuery, window.GitHubBlog);

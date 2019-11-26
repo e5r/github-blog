@@ -4,12 +4,13 @@
 +function ($, gitHubBlog) {
     "use strict";
 
-    var engine = gitHubBlog.themeEngine;
+    var engine = gitHubBlog.themeEngine(),
+        router = gitHubBlog.router();
 
     function themeStartup(blogInfo) {
         applyBlogInfo(blogInfo || {});
         showBlog();
-        route();
+        router.ignite();
     }
 
     function applyBlogInfo(blogInfo) {
@@ -27,8 +28,7 @@
             var item = categoryItemTemplate.clone(),
                 link = $('a', item);
 
-            link.attr('href', 'http://erlimar.com')
-                .attr('target', '_blank')
+            link.attr('href', '#/categoria?goto=true&name=' + category)
                 .text(category);
 
             item.appendTo(categoriesEl);
@@ -40,16 +40,26 @@
         $('body').removeClass('app-loading');
     }
 
-    function installTheme() {
-        gitHubBlog.themeEngine = {
-            startup: themeStartup
-        };
-    }
+    /* Main
+    ---------------------------------------------------------------------- */
+    (function main() {
+        gitHubBlog.themeStartup(themeStartup);
 
-    function route() {
-        var template = engine.getTemplate('home-posts');
-    }
-
-    installTheme();
+        router
+            .when('/home', function homePage(params) {
+                console.log('Show page "/home"!');
+                console.log('-> params:', params);
+            })
+            .when('/about', function aboutPage(params) {
+                console.log('Show page "/about"!');
+                console.log('-> params:', params);
+            })
+            .notFound(function notFoundPage(path, params) {
+                console.log('Page not found!');
+                console.log('-> path:', path);
+                console.log('-> params:', params);
+            })
+            .otherwise('/about');
+    })();
 
 }(jQuery, window.GitHubBlog);
