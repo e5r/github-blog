@@ -583,6 +583,15 @@
         return this;
     }
 
+    Router.prototype.outletSelector = function (selector) {
+        if (typeof selector !== 'string')
+            throw 'Param @selector must be a string';
+
+        this.__outletSelector__ = selector;
+
+        return this;
+    }
+
     Router.prototype.findRouteHandler = function (path) {
         var self = this,
             record = self.__routes__.filter(function (r) { return r.path === path })[0] ||
@@ -591,6 +600,49 @@
                     : { handler: self.__notFoundHandler__.bind({}, path) });
 
         return record.handler.bind({});
+    }
+
+    Router.prototype.view = function (element) {
+        return {
+            resultType: 'view',
+            content: $(element)
+        }
+    }
+
+    Router.prototype.redirect = function (path, params) {
+        if (typeof path !== 'string')
+            throw 'Param @path must be a string';
+
+        return {
+            resultType: 'redirect',
+            content: path,
+            params: params
+        }
+    }
+
+    Router.prototype.makeUrl = function (path, params) {
+        if (typeof path !== 'string')
+            throw 'Param @path must be a string';
+
+        params = params || {};
+
+        if (typeof params !== 'object')
+            throw 'Param @path must be a object';
+
+        var url = "#" + path,
+            query = [];
+
+        for (var p in params)
+            query.push(p + '=' + encodeURIComponent(params[p]));
+
+        if (query.length)
+            url += "?" + query.join("&");
+
+        return url;
+    }
+
+    Router.prototype.go = function (path, params) {
+        window.location.href = this.makeUrl(path, params);
     }
 
     Router.prototype.ignite = function (oldPath) {
@@ -633,9 +685,19 @@
 
                     return result;
                 }, {}),
-            handler = self.findRouteHandler(path);
+            handler = self.findRouteHandler(path),
+            result = handler(params),
+            outlet = $(self.__outletSelector__);
 
-        handler(params);
+        outlet.empty();
+
+        if (!result) return;
+
+        if (result.resultType === 'view')
+            outlet.append(result.content);
+
+        if (result.resultType === 'redirect')
+            window.location.href = self.makeUrl(result.content, result.params);
     }
 
     /* Exports

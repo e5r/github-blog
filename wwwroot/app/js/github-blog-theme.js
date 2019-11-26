@@ -55,11 +55,12 @@
                 console.log('-> params:', params);
             })
             .notFound(function notFoundPage(path, params) {
-                console.log('Page not found!');
-                console.log('-> path:', path);
-                console.log('-> params:', params);
+                var template = engine.getTemplate('not-found');
+
+                return router.view(template);
             })
-            .otherwise('/home');
+            .otherwise('/home')
+            .outletSelector('[data-id="router-outlet"');
     })();
 
 }(jQuery, window.GitHubBlog);

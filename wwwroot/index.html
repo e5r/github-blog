@@ -54,12 +54,16 @@
     </section>
 
     <div class="album py-5 bg-light">
-      <div class="container">
 
-        <script type="text/template" data-template-id="template2"></script>
-        <script data-template-id="home-posts"></script>
+      <script type="text/template" data-template-id="not-found">
+          <div class="row">
+            <div class="col-md-12">
+              <img class="mx-auto d-block img-fluid" src="app/img/404-not-found.png" />
+            </div>
+          </div>
+        </script>
 
-        <script type="text/template" data-template-id="home-posts">
+      <script type="text/template" data-template-id="home-posts">
           <div class="row">
             <div class="col-md-4">
               <div class="card mb-4 shadow-sm">
@@ -77,12 +81,22 @@
           </div>
         </script>
 
+      <div class="container" data-id="router-outlet">
+        <ul>
+          <li>Um</li>
+          <li>dois</li>
+          <li>4</li>
+        </ul>
+        texto
+        <a>outra coisa</a>
+        asldfjalsdf
+        <span>DKLFJlsdjf</span>
       </div>
     </div>
 
   </main>
 
-  <footer class="text-muted d-none border-top fixed-bottom">
+  <footer class="text-muted d-none border-top">
     <div class="container">
       <p class="float-right">
         <a href="#">Topo <i class="fa fa-chevron-up"></i></a>
