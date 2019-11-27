@@ -686,18 +686,19 @@
                     return result;
                 }, {}),
             handler = self.findRouteHandler(path),
-            result = handler(params),
             outlet = $(self.__outletSelector__);
 
-        outlet.empty();
+        handler({ params: params }, function (result) {
+            outlet.empty();
 
-        if (!result) return;
+            if (!result) return;
 
-        if (result.resultType === 'view')
-            outlet.append(result.content);
+            if (result.resultType === 'view')
+                outlet.append(result.content);
 
-        if (result.resultType === 'redirect')
-            window.location.href = self.makeUrl(result.content, result.params);
+            if (result.resultType === 'redirect')
+                window.location.href = self.makeUrl(result.content, result.params);
+        });
     }
 
     /* Exports

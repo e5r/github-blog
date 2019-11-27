@@ -46,18 +46,23 @@
         gitHubBlog.themeStartup(themeStartup);
 
         router
-            .when('/home', function homePage(params) {
+            .when('/home', function homePage(context, done) {
                 console.log('Show page "/home"!');
-                console.log('-> params:', params);
+                console.log('-> context:', context);
+                console.log('-> done:', done);
+
+                done();
             })
-            .when('/about', function aboutPage(params) {
+            .when('/about', function aboutPage(context, done) {
                 console.log('Show page "/about"!');
-                console.log('-> params:', params);
+                console.log('-> context:', context);
+                console.log('-> done:', done);
+                done();
             })
-            .notFound(function notFoundPage(path, params) {
+            .notFound(function notFoundPage(path, context, done) {
                 var template = engine.getTemplate('not-found');
 
-                return router.view(template);
+                done(router.view(template))
             })
             .otherwise('/home')
             .outletSelector('[data-id="router-outlet"');
