@@ -51,7 +51,9 @@
                 console.log('-> context:', context);
                 console.log('-> done:', done);
 
-                done();
+                var template = engine.getTemplate('home-page');
+
+                done(router.view(template))
             })
             .when('/about', function aboutPage(context, done) {
                 console.log('Show page "/about"!');
@@ -60,7 +62,7 @@
                 done();
             })
             .notFound(function notFoundPage(path, context, done) {
-                var template = engine.getTemplate('not-found');
+                var template = engine.getTemplate('not-found-page');
 
                 done(router.view(template))
             })
