@@ -537,6 +537,53 @@
         return categories.sort();
     }
 
+    ThemeEngine.prototype.getPostContent = function (postId, done) {
+        var DATA_FS_CACHE = ensureParam('data.fs.cache', {});
+
+        if (!DATA_FS_CACHE || typeof DATA_FS_CACHE.__root__ !== 'object') {
+            console.error('Invalid object [data.fs.cache]!');
+            return;
+        }
+
+        var cacheFs = new CacheFileSystem(DATA_FS_CACHE),
+            filePath = 'blog/posts/' + postId + '.md';
+
+        cacheFs.readFile(filePath, function (error, fileData) {
+            if (error) {
+                console.error(error);
+                done();
+
+                return;
+            }
+
+            // Convert to HTML if MarkdownIt library is present
+            else if (typeof window.markdownit === 'function') {
+                var options = { linkify: true },
+                    mdUtils = markdownit().utils;
+
+                if (window.hljs && typeof window.hljs.highlight === 'function') {
+                    options.highlight = function (str, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            try {
+                                return '<pre class="hljs"><code>' +
+                                    hljs.highlight(lang, str, true).value +
+                                    '</code></pre>';
+                            } catch (__) { }
+                        }
+
+                        return '<pre class="hljs card"><code>' + mdUtils.escapeHtml(str) + '</code></pre>';
+                    }
+                }
+
+                var mdEngine = window.markdownit('commonmark', options);
+
+                fileData = mdEngine.render(fileData);
+            }
+
+            done(fileData);
+        });
+    }
+
     ThemeEngine.prototype.makeGithubRawAssetUrl = function (path) {
         var urlTemplate = ensureParam('api.raw.assets.url', '');
 

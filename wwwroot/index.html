@@ -8,6 +8,7 @@
   <!-- third party libraries -->
   <link rel="stylesheet" href="lib/css/bootstrap.css">
   <link rel="stylesheet" href="lib/css/font-awesome.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/styles/github.min.css">
   <!-- app -->
   <link rel="stylesheet" href="app/css/index.css">
 </head>
@@ -52,6 +53,27 @@
           </div>
         </div>
       </div>
+    </script>
+
+    <script type="text/template" data-template-id="not-found-post">
+      <div class="container">
+        <div class="album py-5 bg-light">
+          <div class="row">
+            <div class="col-md-12">
+              <img class="mx-auto d-block img-fluid" src="app/img/404-post-not-found.png" />
+              <p class="lead text-center">Infelizmente não existe um post <strong><code data-id="post-id">{}</code></strong> por aqui.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" data-template-id="post-page">
+      <div>
+        <div class="container" data-id="post-container">
+          <p>Seu post vem aqui...</p>
+        </div>
+    </div>
     </script>
 
     <script type="text/template" data-template-id="home-page">
@@ -122,6 +144,8 @@
   <script src="lib/js/jquery.js"></script>
   <script src="lib/js/jquery.base64.js"></script>
   <script src="lib/js/bootstrap.bundle.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/markdown-it/10.0.0/markdown-it.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
   <!-- tmp library -->
   <script src="app/js/github-blog.js"></script>
   <script src="app/js/github-blog-theme.js"></script>

@@ -83,13 +83,37 @@
 
                 $('h3', postEl).text(post.title);
                 $('p', postEl).text(post.abstract);
-                $('a', postEl).attr('href', '#/post/?id=' + post.id);
+                $('a', postEl).attr('href', '#/post/' + post.id);
                 $('small', postEl).text(post.nativeDatetime ? formatDateTime(post.nativeDatetime) : post.datetime);
 
                 postsContainer.append(postEl);
             })
 
             done(router.view(template))
+        });
+
+        // "/post/{postId}" -> View post
+        router.when('/post/:postId', function viewPostPage(context, done) {
+            engine.getPostContent(context.params.postId, function (postContent) {
+                if (postContent) {
+                    var template = engine.getTemplate('post-page'),
+                        content = $(typeof postContent === 'string' ? '<div>' + postContent + '</div>' : postContent);
+
+                    $('pre', content).addClass('card p-2 shadow rounded');
+
+                    $('[data-id="post-container"]', template)
+                        .empty()
+                        .append(content);
+
+                    done(router.view(template));
+                } else {
+                    var template = engine.getTemplate('not-found-post');
+
+                    $('[data-id="post-id"]', template).text(context.params.postId);
+
+                    done(router.view(template));
+                }
+            });
         });
 
         // "*" -> Not found page
