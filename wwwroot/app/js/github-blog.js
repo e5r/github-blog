@@ -325,6 +325,13 @@
             + (config.branch || 'master')
             + '?recursive=1';
 
+        var API_RAW_ASSETS_URL = 'https://raw.githubusercontent.com/'
+            + config.owner + '/'
+            + config.repository + '/'
+            + (config.branch || 'master')
+            + '/blog/assets/';
+
+        ensureParam('api.raw.assets.url', API_RAW_ASSETS_URL);
         ensureParam('api.raw.url', API_RAW_URL);
         ensureParam('tasks.required', ALL_TASKS);
         done();
@@ -528,6 +535,40 @@
             });
 
         return categories.sort();
+    }
+
+    ThemeEngine.prototype.makeGithubRawAssetUrl = function (path) {
+        var urlTemplate = ensureParam('api.raw.assets.url', '');
+
+        return urlTemplate + path;
+    }
+
+    ThemeEngine.prototype.getHomePosts = function () {
+        var self = this,
+            metadata = ensureParam('blog.metadata', {})
+
+        return (metadata.posts || [])
+            .filter(function (post) { return post.showInHome })
+            .sort(function (a, b) { return a.datetime < b.datetime })
+            .map(function (post) {
+                if (!post.bannerUrl &&
+                    typeof post.banner === 'string'
+                    && post.banner.indexOf('assets://') === 0)
+                    post.bannerUrl = self.makeGithubRawAssetUrl(post.banner.substring(9))
+                else if (!post.bannerUrl)
+                    post.bannerUrl = post.banner;
+
+                // 0000-00-00T00:00:00
+                if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\T[0-9]{2}\:[0-9]{2}\:[0-9]{2}$/.test(post.datetime)) {
+                    post.nativeDatetime = new Date(post.datetime);
+                }
+
+                if (!(post.datetime instanceof Date)) {
+                    post.nativeDatetime = new Date(post.datetime);
+                }
+
+                return post;
+            });
     }
 
     /* Router

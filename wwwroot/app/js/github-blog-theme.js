@@ -40,34 +40,70 @@
         $('body').removeClass('app-loading');
     }
 
+    function formatDateTime(datetime) {
+        if (!(datetime instanceof Date))
+            return datetime;
+
+        var years = datetime.getFullYear().toString(),
+            months = datetime.getMonth().toString(),
+            days = datetime.getDate().toString(),
+            hours = datetime.getHours().toString(),
+            minutes = datetime.getMinutes().toString(),
+            seconds = datetime.getSeconds().toString();
+
+        return '0'.repeat(2 - days.length) + days + '/' +
+            '0'.repeat(2 - months.length) + months + '/' +
+            '0'.repeat(4 - years.length) + years + ' ' +
+            '0'.repeat(2 - hours.length) + hours + ':' +
+            '0'.repeat(2 - minutes.length) + minutes + ':' +
+            '0'.repeat(2 - seconds.length) + seconds;
+    }
+
     /* Main
     ---------------------------------------------------------------------- */
     (function main() {
         gitHubBlog.themeStartup(themeStartup);
 
-        router
-            .when('/home', function homePage(context, done) {
-                console.log('Show page "/home"!');
-                console.log('-> context:', context);
-                console.log('-> done:', done);
+        // "/home" -> Home page
+        router.when('/home', function homePage(context, done) {
+            var template = engine.getTemplate('home-page'),
+                postsContainer = $('[data-id="posts-container"]', template),
+                postTemplate = $('[data-id="post"]', template);
 
-                var template = engine.getTemplate('home-page');
+            postsContainer.empty();
 
-                done(router.view(template))
-            })
-            .when('/about', function aboutPage(context, done) {
-                console.log('Show page "/about"!');
-                console.log('-> context:', context);
-                console.log('-> done:', done);
-                done();
-            })
-            .notFound(function notFoundPage(path, context, done) {
-                var template = engine.getTemplate('not-found-page');
+            (engine.getHomePosts() || []).forEach(function (post) {
+                var postEl = postTemplate.clone(),
+                    bannerEl = $('img', postEl);
 
-                done(router.view(template))
+                if (post.bannerUrl)
+                    bannerEl.attr('src', post.bannerUrl)
+                else
+                    bannerEl.remove();
+
+                $('h3', postEl).text(post.title);
+                $('p', postEl).text(post.abstract);
+                $('a', postEl).attr('href', '#/post/?id=' + post.id);
+                $('small', postEl).text(post.nativeDatetime ? formatDateTime(post.nativeDatetime) : post.datetime);
+
+                postsContainer.append(postEl);
             })
-            .otherwise('/home')
-            .outletSelector('[data-id="router-outlet"');
+
+            done(router.view(template))
+        });
+
+        // "*" -> Not found page
+        router.notFound(function notFoundPage(path, context, done) {
+            var template = engine.getTemplate('not-found-page');
+
+            done(router.view(template))
+        });
+
+        // "/" Default route
+        router.otherwise('/home');
+
+        // Outlet DOM selector
+        router.outletSelector('[data-id="router-outlet"');
     })();
 
 }(jQuery, window.GitHubBlog);
