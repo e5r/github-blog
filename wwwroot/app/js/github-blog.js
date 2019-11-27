@@ -633,9 +633,34 @@
         return this;
     }
 
-    Router.prototype.findRouteHandler = function (path) {
+    Router.prototype.findRouteHandler = function (path, params) {
+
+        function matchPath(target) {
+            var targetPaths = target.path.split('/').filter(function (v) { return v }),
+                originPaths = path.split('/').filter(function (v) { return v }),
+                capturedParams = {};
+
+            if (targetPaths.length !== originPaths.length)
+                return false;
+
+            for (var idx = 0; idx < originPaths.length; idx++) {
+                var t = targetPaths[idx],
+                    o = originPaths[idx];
+
+                if (t.charAt(0) === ':')
+                    capturedParams[t.substring(1)] = decodeURIComponent(o)
+                else if (t !== o)
+                    return false;
+            }
+
+            for (var p in capturedParams)
+                params[p] = capturedParams[p];
+
+            return true;
+        }
+
         var self = this,
-            record = self.__routes__.filter(function (r) { return r.path === path })[0] ||
+            record = self.__routes__.filter(matchPath)[0] ||
                 (path === '/'
                     ? self.__routes__.filter(function (r) { return r.path === self.__defaultRoute__ })[0]
                     : { handler: self.__notFoundHandler__.bind({}, path) });
@@ -726,7 +751,7 @@
 
                     return result;
                 }, {}),
-            handler = self.findRouteHandler(path),
+            handler = self.findRouteHandler(path, params),
             outlet = $(self.__outletSelector__);
 
         handler({ params: params }, function (result) {
