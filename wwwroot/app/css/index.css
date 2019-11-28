@@ -11,10 +11,14 @@ body.app-loading .app-loader {
     text-align: center;
 }
 
-body.app-loading .app-loader img {
-}
 body.app-loading .app-loader label {
     display:block;
     text-transform: uppercase;
     color:#a8e8dd;
+}
+
+.post-full-banner {
+    height: 300px;
+    width: 100%;
+    background-position: center;
 }

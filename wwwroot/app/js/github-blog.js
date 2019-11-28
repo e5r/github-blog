@@ -8,6 +8,8 @@
     ---------------------------------------------------------------------- */
     var __startup__ = function () { },
         __themeEngine__ = new ThemeEngine(),
+        __markdownLibrary__ = null,
+        __highlightLibrary__ = null,
         __router__ = new Router(),
         __storage__ = window.localStorage
             ? window.localStorage
@@ -537,8 +539,12 @@
         return categories.sort();
     }
 
-    ThemeEngine.prototype.getPostContent = function (postId, done) {
-        var DATA_FS_CACHE = ensureParam('data.fs.cache', {});
+    ThemeEngine.prototype.getPost = function (postId, done) {
+        var self = this,
+            metadata = ensureParam('blog.metadata', {}),
+            post = (Array.isArray(metadata.posts) ? metadata.posts : [])
+                .filter(function (p) { return p.id === postId })[0],
+            DATA_FS_CACHE = ensureParam('data.fs.cache', {});
 
         if (!DATA_FS_CACHE || typeof DATA_FS_CACHE.__root__ !== 'object') {
             console.error('Invalid object [data.fs.cache]!');
@@ -546,48 +552,96 @@
         }
 
         var cacheFs = new CacheFileSystem(DATA_FS_CACHE),
-            filePath = 'blog/posts/' + postId + '.md';
+            filePaths = [
+                'blog/posts/' + postId + '.html',
+                'blog/posts/' + postId + '.md'
+            ],
+            found = false;
 
-        cacheFs.readFile(filePath, function (error, fileData) {
-            if (error) {
-                console.error(error);
-                done();
+        if (post) post = self.normalizePost(post);
 
-                return;
-            }
+        for (var fp = 0; post && fp < filePaths.length; fp++) {
+            var filePath = filePaths[fp];
 
-            // Convert to HTML if MarkdownIt library is present
-            else if (typeof window.markdownit === 'function') {
-                var options = { linkify: true },
-                    mdUtils = markdownit().utils;
+            if (!cacheFs.fileExists(filePath))
+                continue;
 
-                if (window.hljs && typeof window.hljs.highlight === 'function') {
-                    options.highlight = function (str, lang) {
-                        if (lang && hljs.getLanguage(lang)) {
-                            try {
-                                return '<pre class="hljs"><code>' +
-                                    hljs.highlight(lang, str, true).value +
-                                    '</code></pre>';
-                            } catch (__) { }
-                        }
-
-                        return '<pre class="hljs card"><code>' + mdUtils.escapeHtml(str) + '</code></pre>';
-                    }
+            cacheFs.readFile(filePath, function (error, fileData) {
+                if (error) {
+                    console.error(error);
+                    return;
                 }
 
-                var mdEngine = window.markdownit('commonmark', options);
+                // Convert to HTML if MarkdownIt library is present
+                if (filePath.endsWith('.md') && typeof __markdownLibrary__ === 'function') {
+                    var options = { linkify: true },
+                        mdUtils = __markdownLibrary__().utils;
 
-                fileData = mdEngine.render(fileData);
-            }
+                    // Apply highlight code if highlight.js is present
+                    if (__highlightLibrary__ && typeof __highlightLibrary__.highlight === 'function') {
+                        options.highlight = function (str, lang) {
+                            if (lang && __highlightLibrary__.getLanguage(lang)) {
+                                try {
+                                    return '<pre class="hljs"><code>' +
+                                        __highlightLibrary__.highlight(lang, str, true).value +
+                                        '</code></pre>';
+                                } catch (__) { }
+                            }
 
-            done(fileData);
-        });
+                            return '<pre class="hljs card"><code>' + mdUtils.escapeHtml(str) + '</code></pre>';
+                        }
+                    }
+
+                    var mdEngine = __markdownLibrary__('commonmark', options);
+
+                    fileData = mdEngine.render(fileData);
+                }
+
+                found = true;
+                post.content = fileData;
+
+                done(post);
+            });
+
+            if (found) break;
+        }
+
+        if (!found) done();
     }
 
     ThemeEngine.prototype.makeGithubRawAssetUrl = function (path) {
         var urlTemplate = ensureParam('api.raw.assets.url', '');
 
         return urlTemplate + path;
+    }
+
+    ThemeEngine.prototype.normalizePost = function (post) {
+        var self = this;
+
+        ['banner', 'image'].forEach(function (imgProp) {
+            var urlProp = imgProp + 'Url';
+
+            if (!post[urlProp] &&
+                typeof post[imgProp] === 'string'
+                && post[imgProp].indexOf('assets://') === 0)
+                post[urlProp] = self.makeGithubRawAssetUrl(post[imgProp].substring(9))
+            else if (!post[urlProp])
+                post[urlProp] = post[imgProp];
+        });
+
+        if (Array.isArray(post.abstract))
+            post.abstract = post.abstract.join('\n');
+
+        // 0000-00-00T00:00:00
+        if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\T[0-9]{2}\:[0-9]{2}\:[0-9]{2}$/.test(post.datetime)) {
+            post.nativeDatetime = new Date(post.datetime);
+        }
+
+        if (!(post.datetime instanceof Date)) {
+            post.nativeDatetime = new Date(post.datetime);
+        }
+
+        return post;
     }
 
     ThemeEngine.prototype.getHomePosts = function () {
@@ -597,25 +651,7 @@
         return (metadata.posts || [])
             .filter(function (post) { return post.showInHome })
             .sort(function (a, b) { return a.datetime < b.datetime })
-            .map(function (post) {
-                if (!post.bannerUrl &&
-                    typeof post.banner === 'string'
-                    && post.banner.indexOf('assets://') === 0)
-                    post.bannerUrl = self.makeGithubRawAssetUrl(post.banner.substring(9))
-                else if (!post.bannerUrl)
-                    post.bannerUrl = post.banner;
-
-                // 0000-00-00T00:00:00
-                if (/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}\T[0-9]{2}\:[0-9]{2}\:[0-9]{2}$/.test(post.datetime)) {
-                    post.nativeDatetime = new Date(post.datetime);
-                }
-
-                if (!(post.datetime instanceof Date)) {
-                    post.nativeDatetime = new Date(post.datetime);
-                }
-
-                return post;
-            });
+            .map(self.normalizePost.bind(self));
     }
 
     /* Router
@@ -816,6 +852,9 @@
 
     /* Exports
     ---------------------------------------------------------------------- */
+    __markdownLibrary__ = window.markdownit;
+    __highlightLibrary__ = window.hljs;
+
     exports.GitHubBlog = {
         themeEngine: function () { return __themeEngine__; },
         router: function () { return __router__; },
