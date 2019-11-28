@@ -561,7 +561,8 @@
         if (post) post = self.normalizePost(post);
 
         for (var fp = 0; post && fp < filePaths.length; fp++) {
-            var filePath = filePaths[fp];
+            var filePath = filePaths[fp],
+                isHtml = filePath.endsWith('.html');
 
             if (!cacheFs.fileExists(filePath))
                 continue;
@@ -594,11 +595,31 @@
 
                     var mdEngine = __markdownLibrary__('commonmark', options);
 
-                    fileData = mdEngine.render(fileData);
+                    fileData = '<div>' + mdEngine.render(fileData) + '</div>';
+                    isHtml = true;
                 }
 
                 found = true;
                 post.content = fileData;
+
+                // Change assets links
+                if (isHtml) {
+                    post.content = $(post.content);
+                    [
+                        { tag: 'a', prop: 'href' },
+                        { tag: 'img', prop: 'src' }
+                    ].forEach(function (option) {
+                        $(option.tag, post.content).each(function (_, element) {
+                            var element = $(element),
+                                url = element.attr(option.prop);
+
+                            if (typeof url === 'string' && url.indexOf('assets://') === 0) {
+                                url = self.makeGithubRawAssetUrl(url.substring(9));
+                                element.attr(option.prop, url);
+                            }
+                        });
+                    });
+                }
 
                 done(post);
             });
