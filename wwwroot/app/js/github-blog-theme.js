@@ -120,6 +120,8 @@
         // "/post/{postId}" -> View post
         router.when('/post/:postId', function viewPostPage(context, done) {
             engine.getPost(context.params.postId, function (post) {
+
+                // ------ post or content not found ------
                 if (!post || !post.content) {
                     var template = engine.getTemplate('not-found-post');
 
@@ -130,8 +132,7 @@
                     return;
                 }
 
-                // ------- post content -------
-
+                // ------ post and content found ------
                 var template = engine.getTemplate('post-page'),
                     content = $(typeof post.content === 'string' ? '<div>' + post.content + '</div>' : post.content),
                     fullBannerEl = $('.post-full-banner', template);
@@ -145,7 +146,10 @@
                 $('[data-id="datetime"]', template).text(post.nativeDatetime ? formatDate(post.nativeDatetime) : post.datetime);
                 $('[data-id="author"]', template).text(post.author);
 
+                // Apply custom styles
                 $('pre', content).addClass('card p-2 shadow rounded');
+                $('img', content).addClass('img-thumbnail');
+
                 $('[data-id="post-container"]', template)
                     .empty()
                     .append(content);
