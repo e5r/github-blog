@@ -15,4 +15,4 @@
         gitHubBlog.init(options);
     });
 
-}(jQuery, window.GitHubBlog);
+}(jQuery, window.GithubBlog);

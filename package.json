@@ -7,12 +7,16 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "nodemon ./serve.js",
-    "build": "gulp"
+    "build": "gulp",
+    "build2": "rollup -c ./rollup.config.js"
   },
   "devDependencies": {
     "finalhandler": "^1.1.2",
     "gulp": "^4.0.2",
     "nodemon": "^2.0.1",
+    "rollup": "^1.27.8",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "serve-static": "^1.14.1"
   },
   "dependencies": {

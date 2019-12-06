@@ -172,4 +172,4 @@
         router.outletSelector('[data-id="router-outlet"');
     })();
 
-}(jQuery, window.GitHubBlog);
+}(jQuery, window.GithubBlog);
